@@ -1,0 +1,121 @@
+import * as React from "react";
+import { View, Text, Image, TouchableOpacity } from "react-native";
+import { AntDesign } from "@expo/vector-icons";
+import { useColorScheme } from "nativewind";
+import { useAtom } from "jotai";
+import { cartAtom } from "../screens/Home";
+
+export type ProductCardProps = {
+  image: string;
+  category: string;
+  title: string;
+  price: number;
+  description: string;
+  id: string;
+  count?: number;
+};
+
+export default function ProductCard({
+  image,
+  id,
+  category,
+  title,
+  price,
+  description,
+}: ProductCardProps) {
+  const [count, setCount] = React.useState(1);
+  const { colorScheme } = useColorScheme();
+  const [showDescription, setShowDescription] = React.useState(false);
+  const [cart, setCart] = useAtom(cartAtom);
+
+  function handleRemove() {
+    if (count > 1) {
+      setCount(count - 1);
+    }
+  }
+
+  function handleAdd() {
+    setCount(count + 1);
+  }
+
+  function handleAddToCart() {
+    const item = {
+      image,
+      id,
+      category,
+      title,
+      price,
+      description,
+      count,
+    };
+    setCart((prev) => {
+      const itemExists = prev.find((item) => item.id === id);
+      if (itemExists) {
+        return prev.map((item) => {
+          if (item.id === id) {
+            if (item.count) {
+              item.count += 1;
+            }
+          }
+          return item;
+        });
+      } else {
+        return [...prev, item];
+      }
+    });
+  }
+
+  return (
+    <View className="w-full bg-white dark:bg-gray-50/10 rounded-3xl p-5 my-5">
+      <View className="bg-white rounded-xl">
+        <Image
+          source={{ uri: image }}
+          className={"w-full h-72"}
+          style={{ resizeMode: "contain" }}
+        />
+      </View>
+      <View className="mt-5">
+        <Text className={"text-sm text-black/60 dark:text-white/70"}>
+          {category}
+        </Text>
+        <Text className={"text-lg font-semibold dark:text-white"}>{title}</Text>
+        <View className={"flex-row justify-between items-center my-3"}>
+          <View className={"flex-row items-center gap-3"}>
+            <AntDesign
+              name="minuscircleo"
+              size={24}
+              color={colorScheme === "light" ? "black" : "white"}
+              onPress={handleRemove}
+            />
+            <Text className={"text-xl dark:text-white"}>{count}</Text>
+            <AntDesign
+              name="pluscircleo"
+              size={24}
+              color={colorScheme === "light" ? "black" : "white"}
+              onPress={handleAdd}
+            />
+          </View>
+          <Text className={"text-2xl font-extrabold dark:text-white"}>
+            ${price * count}
+          </Text>
+        </View>
+        <TouchableOpacity onPress={() => setShowDescription(!showDescription)}>
+          <Text
+            numberOfLines={!showDescription ? 2 : undefined}
+            className={"text-sm text-black/60 dark:text-white/70"}
+          >
+            {description}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleAddToCart}
+          className="flex-row justify-center rounded-full bg-black/90 dark:bg-white/90 p-3 w-10/12 self-center mt-5"
+        >
+          <Text className="text-white dark:text-black font-bold">
+            Add To Cart
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
